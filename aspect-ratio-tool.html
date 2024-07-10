@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspect Ratio Comparison Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+        }
+        input[type="number"] {
+            width: 80px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aspect Ratio Comparison Tool</h1>
+    
+    <div class="instructions">
+        <p><strong>How to use:</strong></p>
+        <ol>
+            <li>Upload an image using the file input below.</li>
+            <li>Adjust the two aspect ratios as needed.</li>
+            <li>The image will display with overlays showing how it fits within each aspect ratio.</li>
+            <li>Red overlay represents Aspect Ratio 1, Green overlay represents Aspect Ratio 2.</li>
+        </ol>
+    </div>
+
+    <div class="input-group">
+        <input type="file" id="imageUpload" accept="image/*">
+    </div>
+    
+    <div class="input-group">
+        <label for="ratio1">Aspect Ratio 1:</label>
+        <input type="number" id="ratio1" value="1.03" step="0.01">
+    </div>
+    
+    <div class="input-group">
+        <label for="ratio2">Aspect Ratio 2:</label>
+        <input type="number" id="ratio2" value="1.27" step="0.01">
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const imageUpload = document.getElementById('imageUpload');
+        const ratio1Input = document.getElementById('ratio1');
+        const ratio2Input = document.getElementById('ratio2');
+
+        imageUpload.addEventListener('change', handleImage);
+        ratio1Input.addEventListener('change', updateOverlay);
+        ratio2Input.addEventListener('change', updateOverlay);
+
+        let image;
+
+        function handleImage(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                image = new Image();
+                image.onload = function() {
+                    updateOverlay();
+                }
+                image.src = event.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function updateOverlay() {
+            if (!image) return;
+
+            const ratio1 = parseFloat(ratio1Input.value);
+            const ratio2 = parseFloat(ratio2Input.value);
+
+            canvas.width = 800;  // Set canvas size as needed
+            canvas.height = 600;
+
+            const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
+            const x = (canvas.width / 2) - (image.width / 2) * scale;
+            const y = (canvas.height / 2) - (image.height / 2) * scale;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, x, y, image.width * scale, image.height * scale);
+
+            drawRatioOverlay(ratio1, 'rgba(255, 0, 0, 0.15)');
+            drawRatioOverlay(ratio2, 'rgba(0, 255, 0, 0.15)');
+        }
+
+        function drawRatioOverlay(ratio, color) {
+            const imageRatio = image.width / image.height;
+            let overlayWidth, overlayHeight;
+
+            if (ratio > imageRatio) {
+                overlayWidth = canvas.width;
+                overlayHeight = canvas.width / ratio;
+            } else {
+                overlayHeight = canvas.height;
+                overlayWidth = canvas.height * ratio;
+            }
+
+            const x = (canvas.width - overlayWidth) / 2;
+            const y = (canvas.height - overlayHeight) / 2;
+
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, overlayWidth, overlayHeight);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, overlayWidth, overlayHeight);
+        }
+    </script>
+</body>
+</html>
